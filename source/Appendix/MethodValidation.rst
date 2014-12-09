@@ -13,7 +13,7 @@ Method Validationを使用した契約プログラミング
 --------------------------------------------------------------------------------
 
 契約プログラミングとは、プログラムが満たすべき仕様(契約)が満たされているかをチェックするためのロジックを、
-プログラム内に組み込むことで、プログラムの安全性を高める事を目的としたプログラミング技法である。
+プログラム内部に組み込むことで、プログラムの安全性を高める事を目的としたプログラミング技法である。
 
 具体的には、
 
@@ -30,6 +30,21 @@ Method Validationを使用した契約プログラミング
 
 するものとして、定義している。
 
+契約プログラミングを採用すると、
+
+* メソッドの入出力仕様が不明瞭である事が原因で発生するバグを防止
+* メソッド利用者側の実装ミス(メソッドの間違った使い方)を早期に発見
+* メソッド提供者側の実装ミスを早期に発見
+
+する事ができるため、プログラムの品質を効率的に高めることができるプログラミング技法でもある。
+
+.. note:: **単体テストとの関係について**
+
+    契約プログラミングでは、メソッドのシグネチャ(引数と返り値)に対する仕様の妥当性をチェックすることはできるが、
+    メソッド内部のロジックの妥当性をチェックすることはできない。
+    そのため、メソッド内部のロジックの妥当性をチェックするためには、
+    JUnitなどを使用した単体テストの実施が必要となる。
+
 |
 
 .. _MethodValidationOnBeanValidation:
@@ -40,19 +55,19 @@ Bean ValidationのMethod Validation
 Bean Validation 1.1 より、コンストラクタとメソッドのシグネチャ(引数と返り値)に対して、
 値の妥当性をチェックする仕組みが追加された。(以降「Method Validation」と呼ぶ)。
 
-この仕様追加により、Java言語における契約プログラミングが実装しやすくなった。
+この仕様追加により、Java言語上での契約プログラミングが実現しやすくなった。
 
 Method Validationの仕組みを使用すると、
 
-* メソッドのシグネチャ(引数と返り値)にBean Validationの制約アノテーションを付与するだけで、事前条件と事後条件のチェックを行う事ができる
+* メソッドのシグネチャにBean Validationの制約アノテーションを付与するだけで、事前条件と事後条件のチェックを行う事ができる
 
-* メソッドのシグネチャ(引数と返り値)にBean Validationの制約アノテーションが付与するため、特別なことをすることなく、事前条件と事後条件をJavaDoc(API仕様書)に出力する事ができる
+* メソッドのシグネチャにBean Validationの制約アノテーションを付与するため、特別なことをすることなく、事前条件と事後条件をJavaDoc(API仕様書)に出力する事ができる
 
-ため、契約プログラミングの採用コストを抑えることができる。
+ため、契約プログラミングの導入コストを最小限に抑えつつ、契約プログラミングが持つ効果を得ることができる。
 
 .. note::
 
-    Bean Validationの使用方法については、「:doc:`../ArchitectureInDetail/Validation`」も合わせて参照されたい。
+    Bean Validationの基本的な使用方法については、「:doc:`../ArchitectureInDetail/Validation`」を参照されたい。
 
 |
 
@@ -62,10 +77,11 @@ Spring FrameworkにおけるMethod Validation
 --------------------------------------------------------------------------------
 
 Spring Framework では、Bean Validationの機能と連携し、
-Spring FrameworkのDIコンテナで管理されているBeanのメソッド呼び出しに対して、
-透過的にMethod Validationを実行する仕組みを提供している。
+Spring FrameworkのDIコンテナで管理されているBeanのメソッド呼び出しに対して透過的にMethod Validationを実行する仕組みを提供している。
 
-そのため、メソッド内のロジックで契約プログラミングを意識した実装を一切行う必要がない。
+Spring Frameworkが提供するMethod Validationの仕組みを使用すると、
+メソッドを提供する側とメソッドを利用する側で実装するロジックにおいて、
+契約プログラミングを意識した実装を一切行う必要がない。
 これは、既に実装されているプログラムに対して、Bean Validationの制約アノテーションを付与するだけで、
 契約プログラミングを組み込むことが出来ることを意味している。
 
@@ -78,9 +94,15 @@ Spring FrameworkのDIコンテナで管理されているBeanのメソッド呼�
     Spring Framework 4 からは、下位互換性を保ちつつ、
     Bean Validation 1.1 の機能と連携したMethod Validationの仕組みを提供している。
 
+    また、Spring Frameworkが提供する `プロファイル切替機能 <http://docs.spring.io/spring/docs/4.1.2.RELEASE/spring-framework-reference/html/beans.html#beans-definition-profiles-xml>`_\ を利用することで、
+    実行環境に応じてMethod Validationの実行有無を切り替えることも可能である。
+    例えば、開発及び試験環境ではMethod Validationの実行を有効にし、商用環境では無効にすることも出来る。
+    性能要件上問題がなければ、商用環境でもMethod Validationを実行する事で、アプリケーションの安全性を高めることを推奨する。
+
 .. note::
 
     Spring Frameworkが提供しているMethod Validationの仕組みは、メソッドの呼び出し時のみに実行される点を補足しておく。
+    (つまり、コンストラクタの呼び出しに対してMethod Validationを行うことはできない)
 
 
 |
@@ -242,7 +264,7 @@ Bean Validationの制約アノテーションを使用して、事前条件と�
 具体的には、
 
 * メソッドの引数
-* 引数に指定されたJavaBeanのフィールド
+* メソッドの引数に指定されたJavaBeanのフィールド
 
 に対して事前条件を示すBean Validationの制約アノテーションを、
 
@@ -276,17 +298,18 @@ Bean Validationの制約アノテーションを使用して、事前条件と�
     * - | (1)
       - 事前条件(Bean Validationの制約アノテーション)を、メソッドの引数アノテーションとして指定する。
 
-        上記例では、事前条件として、\ ``message``\ という引数がNull値を許可しない事を示している。
+        上記例では、事前条件として、\ ``message``\ という引数がNull値を許可しない事を示しており、
+        引数にNull値が指定された場合は、契約違反を通知する例外が発生する。
     * - | (2)
       - 事後条件(Bean Validationの制約アノテーション)を、メソッドの返り値アノテーションとして指定する。
 
-        上記例では、事後条件として、返り値がNull値にならないことを示している。
+        上記例では、事後条件として、返り値がNull値にならないことを示しており、
+        返り値としてNull値が返却された場合は、契約違反を通知する例外が発生する。
 
 .. note::
 
     JavaBeanに対してMethod Validationを行う場合は、\ ``@javax.validation.Valid``\ アノテーションを付与する必要がある。
     \ ``@Valid``\ アノテーションを付与しないと、JavaBeanのフィールドに指定した事前条件又は事後条件がチェックされないので注意が必要である。
-
 
 |
 
@@ -297,7 +320,7 @@ Bean Validationの制約アノテーションを使用して、事前条件と�
 
 契約(事前条件及び事後条件)に違反した場合、\ ``javax.validation.ConstraintViolationException``\ が発生する。
 
-\ ``ConstraintViolationException``\ が発生した場合、スタックトレースは表示されるため、違反が発生したメソッドは特定できるが、
+\ ``ConstraintViolationException``\ が発生した場合、スタックトレースから発生したメソッドは特定できるが、
 具体的な違反内容が特定できない。
 
 違反内容を特定するためには、\ ``ConstraintViolationException``\ をハンドリングしてログ出力を行う例外ハンドリングクラスを作成するとよい。
@@ -320,8 +343,10 @@ Bean Validationの制約アノテーションを使用して、事前条件と�
 
         private static final Logger log = LoggerFactory.getLogger(ConstraintViolationExceptionHandler.class);
 
+        // (1)
         @ExceptionHandler
         public String handleConstraintViolationException(ConstraintViolationException e){
+            // (2)
             log.error("ConstraintViolations[\n{}\n]", e.getConstraintViolations());
             return "common/error/systemError";
         }
@@ -337,9 +362,14 @@ Bean Validationの制約アノテーションを使用して、事前条件と�
       - 説明
     * - | (1)
       - \ ``ConstraintViolationException``\ をハンドリングするための\ ``@ExceptionHandler``\ メソッドを作成する。
-    * - | (2)
-      - \ ``ConstraintViolationException``\ が保持している\ ``ConstraintViolation``\ の\ ``Set``\ を文字列化に変換し、ログに出力する。
 
+        メソッドの引数として、\ ``ConstraintViolationException``\ を受け取るようにする。
+    * - | (2)
+      - メソッドの引数で受け取った\ ``ConstraintViolationException``\ が保持している違反内容(\ ``ConstraintViolation``\ の\ ``Set``\ )をログに出力する。
+
+.. note::
+
+    \ ``@ControllerAdvice``\ アノテーションの詳細については「:ref:`application_layer_controller_advice`」を参照されたい。
 
 .. raw:: latex
 
