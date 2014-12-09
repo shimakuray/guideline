@@ -28,7 +28,7 @@ Method Validationを使用した契約プログラミング
 
 * メソッドの終了時に保証すべき条件の事を **「事後条件」** と呼び、メソッドを提供する側が返り値として返却する値の妥当性をチェック
 
-するものとして、定義している。
+するものと定義している。
 
 契約プログラミングを採用すると、
 
@@ -77,7 +77,8 @@ Spring FrameworkにおけるMethod Validation
 --------------------------------------------------------------------------------
 
 Spring Framework では、Bean Validationの機能と連携し、
-Spring FrameworkのDIコンテナで管理されているBeanのメソッド呼び出しに対して透過的にMethod Validationを実行する仕組みを提供している。
+Spring FrameworkのDIコンテナで管理されているBeanのメソッド呼び出しに対して、
+透過的にMethod Validationを実行する仕組みを提供している。
 
 Spring Frameworkが提供するMethod Validationの仕組みを使用すると、
 メソッドを提供する側とメソッドを利用する側で実装するロジックにおいて、
@@ -104,6 +105,56 @@ Spring Frameworkが提供するMethod Validationの仕組みを使用すると�
     Spring Frameworkが提供しているMethod Validationの仕組みは、メソッドの呼び出し時のみに実行される点を補足しておく。
     (つまり、コンストラクタの呼び出しに対してMethod Validationを行うことはできない)
 
+|
+
+.. _MethodValidationRole:
+
+Validationの分類
+--------------------------------------------------------------------------------
+
+アプリケーションで実行するValidationは、以下の2つの分類する事ができる。
+
+* クライアントからの入力値の妥当性をチェックする「Input Validation」
+* プログラム内部のメッセージ(メソッドの引数と返り値)をチェックする「Method Validation」
+
+この2つのValidationが果たす役割は、以下の通りである。
+
+.. tabularcolumns:: |p{0.10\linewidth}|p{0.20\linewidth}|p{0.70\linewidth}|
+.. list-table::
+    :header-rows: 1
+    :widths: 10 20 70
+
+    * - 項番
+      - 分類
+      - 役割
+    * - | (1)
+      - Input Validation
+      - アプリケーションの外部仕様を満たすために行うチェックであり、クライアントからの不正なリクエストからアプリケーションを守る役割も合わせもつ。
+
+        **アプリケーションを構築する際は、「Input Validation」は必ず行う必要がある。**
+        「Input Validation」の詳細については、「:doc:`../ArchitectureInDetail/Validation`」を参照されたい。
+    * - | (2)
+      - Method Validation
+      - メソッドのインタフェース仕様(メソッドの引数と返り値の仕様)を満たす実装になっているかをチェックすることで、
+        ブログラムの不備(バグ)からアプリケーションを守る役割をもつ。
+
+.. note::
+
+    上記で示した通り、この2つのValidationが果たす役割は大きく異なるため、どちらか一方を行えばよいという関係ではない。
+
+    「Method Validation」の導入については、
+
+    * 構築するアプリケーションの構成
+    * 開発体制
+
+    などを加味して決めて頂きたい。
+
+    例えば、
+
+    * 開発体制が分散しており、別チームの作成したAPI(共通部品など)を呼び出す機会が多い
+    * 実装者のスキルが低い
+
+    といった状況下では、「Method Validation」を使用した契約プログラミングの導入を検討した方がよい。
 
 |
 
@@ -175,6 +226,8 @@ Spring Frameworkから提供されている\ ``org.springframework.validation.be
         \ ``validator``\ プロパティには、(1)で定義したBeanを指定する。
     * - | (3)
       - \ ``<mvc:annotation-driven>``\ 要素の\ ``validator``\ 属性に、(1)で定義したBeanを指定する。
+
+        この設定は、Spring MVCが提供しているInput Validationを使用するために必要な設定である。
     * - | (4)
       - \ ``MethodValidationPostProcessor``\ をBean定義し、
         アプリケーション層のクラスのメソッドに対してMethod Validationが実行されるようにする。
