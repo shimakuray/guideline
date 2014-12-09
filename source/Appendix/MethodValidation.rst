@@ -215,7 +215,7 @@ Method Validation対象のメソッドにするための定義方法
 Method Validationを実行するAOPを適用するためには、
 インタフェース又はクラスレベルに\ ``@ org.springframework.validation.annotation.Validated``\ アノテーションを付与する必要がある。
 
-ここでは、インタフェースにアノテーションを指定する方法を紹介する。
+ここでは、インタフェースに対してアノテーションを指定する方法を紹介する。
 
 .. code-block:: java
 
@@ -273,7 +273,18 @@ Bean Validationの制約アノテーションを使用して、事前条件と�
 
 に対して事後条件を示すBean Validationの制約アノテーションを指定する。
 
-ここでは、インタフェースにアノテーションを指定する方法を紹介する。
+以下に、具体的な指定方法について説明する。
+以降の説明では、インタフェースにアノテーションを指定する方法を紹介する。
+
+.. _MethodValidationOnSpringFrameworkHowToUseApplyRulesBasicType:
+
+基本型への指定方法
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+まず、メソッドのシグネチャとして基本型(プリミティブやプリミティブラッパ型など)を使用するメソッドに対して、
+事前条件と事後条件を指定する方法について説明する。
+
+ここでは、インタフェースに対してアノテーションを指定する方法を紹介する。
 
 .. code-block:: java
 
@@ -285,7 +296,13 @@ Bean Validationの制約アノテーションを使用して、事前条件と�
 
     @Validated
     public interface HelloService {
-        /* (2) */ @NotNull String hello(/* (1) */  @NotNull String message);
+
+        // (2)
+        @NotNull
+        String hello(
+                // (1)
+                @NotNull String message);
+
     }
 
 .. tabularcolumns:: |p{0.10\linewidth}|p{0.90\linewidth}|
@@ -296,20 +313,181 @@ Bean Validationの制約アノテーションを使用して、事前条件と�
     * - 項番
       - 説明
     * - | (1)
-      - 事前条件(Bean Validationの制約アノテーション)を、メソッドの引数アノテーションとして指定する。
+      - 事前条件(Bean Validationの制約アノテーション)をメソッドの引数アノテーションとして指定する。
 
         上記例では、事前条件として、\ ``message``\ という引数がNull値を許可しない事を示しており、
         引数にNull値が指定された場合は、契約違反を通知する例外が発生する。
     * - | (2)
-      - 事後条件(Bean Validationの制約アノテーション)を、メソッドの返り値アノテーションとして指定する。
+      - 事後条件(Bean Validationの制約アノテーション)をメソッドアノテーションとして指定する。
 
         上記例では、事後条件として、返り値がNull値にならないことを示しており、
         返り値としてNull値が返却された場合は、契約違反を通知する例外が発生する。
 
+|
+
+.. _MethodValidationOnSpringFrameworkHowToUseApplyRulesJavaBean:
+
+JavaBeanへの指定方法
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+次に、メソッドのシグネチャとしてJavaBeanを使用するメソッドに対して、
+事前条件と事後条件を指定する方法について説明する。
+
+ここでは、インタフェースに対してアノテーションを指定する方法を紹介する。
+
 .. note::
 
-    JavaBeanに対してMethod Validationを行う場合は、\ ``@javax.validation.Valid``\ アノテーションを付与する必要がある。
-    \ ``@Valid``\ アノテーションを付与しないと、JavaBeanのフィールドに指定した事前条件又は事後条件がチェックされないので注意が必要である。
+    ポイントは、\ ``@javax.validation.Valid``\ アノテーションを指定するという点である。
+    以下に、サンプルコード使って指定方法を詳しく説明する。
+
+**Serviceインタフェース**
+
+.. code-block:: java
+
+    package com.example.domain.service;
+
+    import org.springframework.validation.annotation.Validated;
+
+    import javax.validation.constraints.NotNull;
+
+    @Validated
+    public interface HelloService {
+
+        @NotNull // (3)
+        @Valid   // (4)
+        HelloOutput hello(
+                    @NotNull // (1)
+                    @Valid   // (2)
+                    HelloInput input);
+
+    }
+
+.. tabularcolumns:: |p{0.10\linewidth}|p{0.90\linewidth}|
+.. list-table::
+    :header-rows: 1
+    :widths: 10 90
+
+    * - 項番
+      - 説明
+    * - | (1)
+      - 事前条件(Bean Validationの制約アノテーション)をメソッドの引数アノテーションとして指定する。
+
+        上記例では、事前条件として、\ ``input``\ という引数(JavaBean)がNull値を許可しない事を示しており、
+        引数にNull値が指定された場合は、契約違反を通知する例外が発生する。
+    * - | (2)
+      - \ ``@javax.validation.Valid``\ アノテーションをメソッドの引数アノテーションとして指定する。
+
+        \ ``@Valid``\ アノテーションを付与する事で、引数のJavaBeanのフィールドに指定した事前条件(Bean Validationの制約アノテーション)が有効となる。
+        JavaBeanに指定された事前条件を満たさない場合は、契約違反を通知する例外が発生する。
+    * - | (3)
+      - 事後条件(Bean Validationの制約アノテーション)をメソッドアノテーションとして指定する。
+
+        上記例では、事後条件として、返り値のJavaBeanがNull値にならないことを示しており、
+        返り値としてNull値が返却された場合は、契約違反を通知する例外が発生する。
+    * - | (4)
+      - \ ``@Valid``\ アノテーションをメソッドアノテーションとして指定する。
+
+        \ ``@Valid``\ アノテーションを付与する事で、返り値のJavaBeanのフィールドに指定した事後条件(Bean Validationの制約アノテーション)が有効となる。
+        JavaBeanに指定された事後条件を満たさない場合は、契約違反を通知する例外が発生する。
+
+|
+
+| 以下にJavaBeanの実装サンプルを紹介する。
+| 基本的には、Bean Validationの制約アノテーションを指定するだけだが、JavaBeanが更にJavaBeanをネストしている場合は注意が必要になる。
+
+**Input用のJavaBean**
+
+.. code-block:: java
+
+    package com.example.domain.service;
+
+    import javax.validation.constraints.NotNull;
+    import javax.validation.constraints.Past;
+    import java.util.Date;
+
+    public class HelloInput {
+
+        @NotNull
+        @Past
+        private Date visitDate;
+
+        @NotNull
+        private String visitMessage;
+
+        private String userId;
+
+        // ...
+
+    }
+
+**Output用のJavaBean**
+
+.. code-block:: java
+
+    package com.example.domain.service;
+
+    import com.example.domain.model.User;
+
+    import java.util.Date;
+
+    import javax.validation.Valid;
+    import javax.validation.constraints.NotNull;
+    import javax.validation.constraints.Past;
+
+    public class HelloOutput {
+
+        @NotNull
+        @Past
+        private Date acceptDate;
+
+        @NotNull
+        private String acceptMessage;
+
+        @Valid // (5)
+        private User user;
+
+        // ...
+
+    }
+
+**Output用のJavaBean内でネストしているJavaBean**
+
+.. code-block:: java
+
+    package com.example.domain.model;
+
+    import javax.validation.constraints.NotNull;
+    import javax.validation.constraints.Past;
+    import java.util.Date;
+
+    public class User {
+
+        @NotNull
+        private String userId;
+
+        @NotNull
+        private String userName;
+
+        @Past
+        private Date dateOfBirth;
+
+        // ...
+
+    }
+
+.. tabularcolumns:: |p{0.10\linewidth}|p{0.90\linewidth}|
+.. list-table::
+    :header-rows: 1
+    :widths: 10 90
+
+    * - 項番
+      - 説明
+    * - | (5)
+      - ネストしたJavaBeanに指定している事前・事後条件(Bean Validationの制約アノテーション)を有効にする場合は、
+        \ ``@Valid``\ アノテーションをフィールドアノテーションとして指定する。
+
+        \ ``@Valid``\ アノテーションを付与する事で、ネストしたJavaBeanのフィールドに指定した事前・事後条件(Bean Validationの制約アノテーション)が有効となる。
+        ネストしたJavaBeanに指定された事前・事後条件を満たさない場合は、契約違反を通知する例外が発生する。
 
 |
 
